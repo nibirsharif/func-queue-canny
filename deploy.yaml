@@ -1,0 +1,58 @@
+data:
+  AzureWebJobsStorage: RGVmYXVsdEVuZHBvaW50c1Byb3RvY29sPWh0dHBzO0FjY291bnROYW1lPXNuaWJpcmtlZGFzdG9yO0FjY291bnRLZXk9ZkJLOVlqYW44Vm8xdnJGZ2xhTTFaQS83YVl3eHpOcVk5N3lxaEhPUlpQQTBHdHBoUWUzSTlWdGJLZVhkUjJvc1E0SHh2KzJxLytybHpFWDczR3U1TXc9PTtFbmRwb2ludFN1ZmZpeD1jb3JlLndpbmRvd3MubmV0
+  FUNCTIONS_WORKER_RUNTIME: cHl0aG9u
+  snibirkedastor_STORAGE: RGVmYXVsdEVuZHBvaW50c1Byb3RvY29sPWh0dHBzO0FjY291bnROYW1lPXNuaWJpcmtlZGFzdG9yO0FjY291bnRLZXk9ZkJLOVlqYW44Vm8xdnJGZ2xhTTFaQS83YVl3eHpOcVk5N3lxaEhPUlpQQTBHdHBoUWUzSTlWdGJLZVhkUjJvc1E0SHh2KzJxLytybHpFWDczR3U1TXc9PTtFbmRwb2ludFN1ZmZpeD1jb3JlLndpbmRvd3MubmV0
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func-queue-canny
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: func-queue-canny
+  namespace: default
+  labels:
+    app: func-queue-canny
+spec:
+  selector:
+    matchLabels:
+      app: func-queue-canny
+  template:
+    metadata:
+      labels:
+        app: func-queue-canny
+    spec:
+      containers:
+      - name: func-queue-canny
+        image: nibirsharif/func-queue-canny
+        env:
+        - name: AzureFunctionsJobHost__functions__0
+          value: QueueTriggerCanny
+        envFrom:
+        - secretRef:
+            name: func-queue-canny
+      tolerations:
+      - operator: Exists
+---
+apiVersion: keda.k8s.io/v1alpha1
+kind: ScaledObject
+metadata:
+  name: func-queue-canny
+  namespace: default
+  labels:
+    deploymentName: func-queue-canny
+spec:
+  scaleTargetRef:
+    deploymentName: func-queue-canny
+  triggers:
+  - type: azure-queue
+    metadata:
+      name: msg
+      type: queueTrigger
+      direction: in
+      queueName: canny-queue
+      connection: snibirkedastor_STORAGE
+---
+
