@@ -15,7 +15,7 @@ def main(msg: func.QueueMessage) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
                  msg.get_body().decode('utf-8'))
     blob_name = msg.get_body().decode('utf-8')
-    connection_string = ""
+    connection_string = os.environ["snibirkedastor_STORAGE"]
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     start_time = time.perf_counter()
     try:
